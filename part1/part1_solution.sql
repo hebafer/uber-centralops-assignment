@@ -6,7 +6,7 @@ SELECT     pickup_local_time,
            rider_app, 
            rider_device, 
            rider_trip_count, 
-           bills.rider_id, 
+           bills.rider_id AS rider_id,
            count(CASE WHEN partner_id IN drivers.vehicles) AS partner_vehicle_count, 
            driver_trip_count, 
            drivers.driver_id, 
@@ -40,6 +40,8 @@ ON         bills.trip_id = trips.trip_id
 INNER JOIN riders 
 ON         riders.rider_id = bills.rider_id 
 INNER JOIN drivers 
-ON         drivers.driver_id = bills.driver_id 
+ON         drivers.driver_id = bills.driver_id
+INNER JOIN drivers AS partners
+ON         driver_id = bills.partner_id
 INNER JOIN vehicles 
 ON         vehicles.vehicle_id = trips.vehicle_id
