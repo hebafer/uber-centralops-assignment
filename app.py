@@ -5,6 +5,7 @@ import dash
 import dash_core_components as dcc
 import dash_bootstrap_components as dbc
 import dash_html_components as html
+import flask
 from dash.dependencies import Input, Output
 from plotly import graph_objs as go
 
@@ -16,6 +17,7 @@ from datetime import datetime as dt
 from riyadh import riyadh_districts
 
 # Initialize app
+server = flask.Flask(__name__)
 
 external_stylesheets = [dbc.themes.BOOTSTRAP]
 
@@ -25,6 +27,7 @@ app = dash.Dash(
     meta_tags=[
         {"name": "viewport", "content": "width=device-width, initial-scale=1.0"}
     ],
+    server=server
 )
 
 mapbox_access_token = "pk.eyJ1IjoiaGViYWZlciIsImEiOiJja2ZhNW0weDAwc3BxMnJxZ3R4aTRhamI5In0.iSxG3ojGiooYYUmxMf6BzA"
