@@ -45,3 +45,4 @@ INNER JOIN drivers AS partners
 ON         driver_id = bills.partner_id
 INNER JOIN vehicles 
 ON         vehicles.vehicle_id = trips.vehicle_id
+WHERE      city_id = 1
