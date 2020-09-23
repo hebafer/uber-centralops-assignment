@@ -11,7 +11,6 @@ from plotly import graph_objs as go
 
 import pandas as pd
 import numpy as np
-import json
 from datetime import datetime as dt
 
 from riyadh import riyadh_districts
@@ -408,7 +407,6 @@ app.layout = html.Div(
         style={'margin': '20px'}
         )
     ],
-    # set the sizing of the parent div
     style = {'display': 'inline-block', 'width': '95%'}
 )
 
