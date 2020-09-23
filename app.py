@@ -15,6 +15,7 @@ import json
 from datetime import datetime as dt
 
 from riyadh import riyadh_districts
+from choropleth import fig as choropleth_fig
 
 # Initialize app
 server = flask.Flask(__name__)
@@ -221,10 +222,8 @@ def getLatLonColor(selectedData, month, day, switchUser):
     ],
 )
 def update_graph(datePicked, selectedData, switchUser):
-    zoom = 12.0
     latInitial = 24.774265
     lonInitial = 46.738586
-    bearing = 0
 
     date_picked = dt.strptime(datePicked, "%Y-%m-%d")
     monthPicked = date_picked.month - 4
@@ -266,28 +265,11 @@ def update_graph(datePicked, selectedData, switchUser):
                 accesstoken=mapbox_access_token,
                 center=dict(lat=latInitial, lon=lonInitial),  # 40.7272  # -73.991251
                 style="light",
-                bearing=bearing,
-                zoom=zoom,
+                bearing=0,
+                zoom=6,
             ),
             updatemenus=[
                 dict(
-                    buttons=(
-                        [
-                            dict(
-                                args=[
-                                    {
-                                        "mapbox.zoom": 12,
-                                        "mapbox.center.lon": "24.774265",
-                                        "mapbox.center.lat": "46.738586",
-                                        "mapbox.bearing": 0,
-                                        "mapbox.style": "light",
-                                    }
-                                ],
-                                label="Reset Zoom",
-                                method="relayout",
-                            )
-                        ]
-                    ),
                     direction="left",
                     pad={"r": 0, "t": 0, "b": 0, "l": 0},
                     showactive=False,
@@ -312,9 +294,9 @@ controls = dbc.Card(
             dbc.Row(
                 children=[
                 html.Img(src=app.get_asset_url('uber_logo.svg'), style={'height': '25px'}),
-                html.H2("Riyadh Rides in 2018", style={'margin': '0', 'line-height': '1', 'text-align': 'right'})
+                html.H2("Riyadh Rides in 2018", style={'margin': '0', 'lineHeight': '1', 'textAlign': 'right'})
             ],
-            style={'margin': '0px', 'margin-bottom': '20px', 'display': 'flex', 'justify-content': 'space-between', 'align-items': 'center'}
+            style={'margin': '0px', 'marginBottom': '20px', 'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'}
             ),
             dbc.Label("Select Date"),
             dcc.DatePickerSingle(
@@ -372,21 +354,26 @@ controls = dbc.Card(
 
 map_histogram =[
         dcc.Graph(id="map-graph"),
-        html.Div(
-            className="text-padding",
-            children=[
-                "Select any of the bars on the histogram to section data by time."
-            ],
-        ),
-        dcc.Graph(id="histogram"),
+        dcc.Graph(id="histogram", style={'paddingTop': '45px'})
     ]
+
+choropleth_map = dcc.Graph(
+        id='choropleth_map',
+        figure=choropleth_fig
+    )
+
+kepler_gl = dbc.Card(
+    html.Iframe(id='kepler_gl', srcDoc=open(os.path.join("kepler_maps", "kepler.gl.html")).read(), width='100%', height='100%'),
+    style={'height': '98%'}
+)
+
 
 tabs = dbc.Container(
     [
         dbc.Tabs(
             [
-                dbc.Tab(label="Scatter", tab_id="choroplethmap"),
-                dbc.Tab(label="Kepler", tab_id="keplergl")
+                dbc.Tab(label="Choropleth Map", tab_id="choropleth_map"),
+                dbc.Tab(label="Kepler GL", tab_id="kepler_gl")
             ],
             id="tabs",
             active_tab="scatter",
@@ -395,32 +382,15 @@ tabs = dbc.Container(
     ],
     style={'height': '48.8%', 'margin': '0', 'width': '100%'}
 )
-
-choroplethmap = kepler_gl = dbc.Card(
-    go.Choroplethmapbox(
-        geojson=json.load(open(os.path.join(APP_PATH, os.path.join("data", "riyadh_districts.geojson"))))
-    ),
-    style={'height': '98%'}
-)
-kepler_gl = dbc.Card(
-    html.Iframe(id='keplergl', srcDoc=open(os.path.join("kepler_maps", "kepler.gl.html"), 'r').read(), width='100%', height='100%'),
-    style={'height': '98%'}
-)
-
 @app.callback(
     Output("tab-content", "children"),
     [Input("tabs", "active_tab")],
 )
 def render_tab_content(active_tab):
-    """
-    This callback takes the 'active_tab' property as input, as well as the
-    stored graphs, and renders the tab content depending on what the value of
-    'active_tab' is.
-    """
     if active_tab is not None:
-        if active_tab == "scatter":
-            return dcc.Graph()
-        elif active_tab == "keplergl":
+        if active_tab == "choropleth_map":
+            return choropleth_map
+        elif active_tab == "kepler_gl":
             return kepler_gl
     return "No tab selected"
 
@@ -443,4 +413,4 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run_server(debug=True)
+    app.run_server(port=8040, debug=True)

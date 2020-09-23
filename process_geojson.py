@@ -5,12 +5,18 @@ import json
 APP_PATH = str(pathlib.Path(__file__).parent.resolve())
 FILE_PATH = os.path.join(APP_PATH, os.path.join("data", "districts.json"))
 
+def reverse_boundaries(boundaries):
+    for lists in boundaries:
+        for list in lists:
+            list.reverse()
 
-def district_to_feature(district_id, name_en, boundaries):
+def district_to_feature(id, district_id, name_en, boundaries):
+    reverse_boundaries(boundaries)
     return {
         "type": "Feature",
+        "id": id,
         "properties": {
-            "district_id": district_id,
+            "disitrict_id": district_id,
             "name": name_en
         },
         "geometry": {
@@ -28,8 +34,10 @@ with open(FILE_PATH) as json_file:
 
     geos = []
 
+    i = 0
     for d in riyadh_dist:
-        geos.append(district_to_feature(d['district_id'], d['name_en'], d['boundaries']))
+        geos.append(district_to_feature(i, d['district_id'], d['name_en'], d['boundaries']))
+        i += 1
 
     riyadh_geometries = {
         'type': 'FeatureCollection',
