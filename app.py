@@ -42,10 +42,11 @@ df = pd.read_csv(FILE_PATH, dtype=object).dropna()
 
 # Split dataframe in pickups/dropoffs
 column_names = ['time', 'lat', 'long', 'district']
-pickups = df.loc[:, ['pickup_utc_time','pickup_lat', 'pickup_long', 'pickup_districts']]
+pickups = df.loc[:, ['pickup_utc_time', 'pickup_lat', 'pickup_long', 'pickup_districts']]
 pickups.columns = column_names
-dropoffs = df.loc[:, ['dropoff_utc_time','dropoff_lat', 'dropoff_long', 'dropoff_districts']]
+dropoffs = df.loc[:, ['dropoff_utc_time', 'dropoff_lat', 'dropoff_long', 'dropoff_districts']]
 dropoffs.columns = column_names
+
 
 # Convert timestamps to datetime objects
 pickups["time"] = pd.to_datetime(pickups["time"], format="%Y-%m-%d %H:%M")
@@ -70,7 +71,6 @@ def totalList(df):
 listPickups = totalList(pickups)
 listDropoffs = totalList(dropoffs)
 
-#TODO: Channge by slider
 totalList = listPickups
 
 daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
@@ -82,7 +82,9 @@ def get_selection(month, day, selection, switchUser):
     xVal = []
     yVal = []
     xSelected = []
-    colorVal =['#67001f', '#870924', '#a81529', '#bd3335', '#cd5044', '#dc6c56', '#e98a6d', '#f5a785', '#fabfa3', '#fdd6c1', '#fce5d8', '#f9f1ec', '#eff3f5', '#deebf2', '#cce2ee', '#b1d4e7', '#95c6df', '#76b1d3', '#539bc8', '#3c87bd', '#2d73b3', '#1d5fa2', '#114781', '#053061']
+    colorVal = ['#67001f', '#870924', '#a81529', '#bd3335', '#cd5044', '#dc6c56', '#e98a6d', '#f5a785', '#fabfa3',
+                '#fdd6c1', '#fce5d8', '#f9f1ec', '#eff3f5', '#deebf2', '#cce2ee', '#b1d4e7', '#95c6df', '#76b1d3',
+                '#539bc8', '#3c87bd', '#2d73b3', '#1d5fa2', '#114781', '#053061']
     xSelected.extend([int(x) for x in selection])
     rides = listPickups
     if switchUser == 'pickup':
@@ -95,6 +97,7 @@ def get_selection(month, day, selection, switchUser):
         # Get the number of rides at a particular time
         yVal.append(len(rides[month][day][rides[month][day].index.hour == i]))
     return [np.array(xVal), np.array(yVal), np.array(colorVal)]
+
 
 # Selected Data in the Histogram updates the Values in the DatePicker
 @app.callback(
@@ -110,19 +113,63 @@ def update_bar_selector(value, clickData):
             holder.append(str(int(x["x"])))
     return list(set(holder))
 
+
 # Clear Selected Data if Click Data is used
 @app.callback(Output("histogram", "selectedData"), [Input("histogram", "clickData")])
 def update_selected_data(clickData):
     if clickData:
         return {"points": []}
 
+
 # Update the total number of rides Tag
-# @app.callback(Output("total-rides", "children"), [Input("date-picker", "date")])
-# def update_total_rides(datePicked):
-#     date_picked = dt.strptime(datePicked, "%Y-%m-%d")
-#     return "Total Number of rides: {:,d}".format(
-#         len(totalList[date_picked.month - 4][date_picked.day - 1])
-#     )
+@app.callback(Output("total-rides", "children"), [Input("date-picker", "date")])
+def update_total_rides(datePicked):
+    date_picked = dt.strptime(datePicked, "%Y-%m-%d")
+    return "Number of rides: {:,d}".format(
+        len(totalList[date_picked.month - 4][date_picked.day - 1])
+    )
+
+# Update the total number of rides in selected times
+@app.callback(
+    [Output("total-rides-selection", "children"), Output("date-value", "children")],
+    [Input("date-picker", "date"), Input("hours", "value")],
+)
+def update_total_rides_selection(datePicked, selection):
+    if selection is not None or len(selection) != 0:
+        date_picked = dt.strptime(datePicked, "%Y-%m-%d")
+        totalInSelection = 0
+        for x in selection:
+            totalInSelection += len(
+                totalList[date_picked.month - 4][date_picked.day - 1][
+                    totalList[date_picked.month - 4][date_picked.day - 1].index.hour
+                    == int(x)
+                ]
+            )
+        firstOutput = "Rides in selection: {:,d}".format(totalInSelection)
+
+    if (
+        datePicked is None
+        or selection is None
+        or len(selection) == 24
+        or len(selection) == 0
+    ):
+        return firstOutput, ("Showing hour(s): All")
+
+    holder = sorted([int(x) for x in selection])
+
+    if holder == list(range(min(holder), max(holder) + 1)):
+        return (
+            firstOutput,
+            (
+                "Showing hour(s): ",
+                holder[0],
+                "-",
+                holder[len(holder) - 1],
+            ),
+        )
+
+    holder_to_string = ", ".join(str(x) for x in holder)
+    return firstOutput, ("Showing hour(s): ", holder_to_string)
 
 # Update Histogram Figure based on Month, Day and Times Chosen
 @app.callback(
@@ -191,13 +238,14 @@ def update_histogram(datePicked, selection, switchUser):
         layout=layout,
     )
 
+
 # Get the Coordinates of the chosen months, dates and times
 def getLatLonColor(selectedData, month, day, switchUser):
     list = "listPickups"
     if switchUser == 'pickup':
         listCoords = listPickups[month][day]
     else:
-        list= "listDropoffs"
+        list = "listDropoffs"
         listCoords = listDropoffs[month][day]
 
     # No times selected, output all times for chosen month and date
@@ -210,6 +258,7 @@ def getLatLonColor(selectedData, month, day, switchUser):
         else:
             listStr += "({}[month][day].index.hour==".format(list) + str(int(time)) + ")]"
     return eval(listStr)
+
 
 # Update Map Graph based on date-picker, selected data on histogram and location dropdown
 @app.callback(
@@ -290,21 +339,22 @@ controls = dbc.Card(
     [
         dbc.FormGroup(
             [
-            dbc.Row(
-                children=[
-                html.Img(src=app.get_asset_url('uber_logo.svg'), style={'height': '25px'}),
-                html.H2("Riyadh Rides in 2018", style={'margin': '0', 'lineHeight': '1', 'textAlign': 'right'})
-            ],
-            style={'margin': '0px', 'marginBottom': '20px', 'display': 'flex', 'justifyContent': 'space-between', 'alignItems': 'center'}
-            ),
-            dbc.Label("Select Date"),
-            dcc.DatePickerSingle(
-                id="date-picker",
-                min_date_allowed=dt(2018, 5, 7),
-                max_date_allowed=dt(2018, 7, 1),
-                initial_visible_month=dt(2018, 5, 7),
-                date="2018-05-07",
-                display_format="YYYY-MM-DD"
+                dbc.Row(
+                    children=[
+                        html.Img(src=app.get_asset_url('uber_logo.svg'), style={'height': '25px'}),
+                        html.H2("Riyadh Rides in 2018", style={'margin': '0', 'lineHeight': '1', 'textAlign': 'right'})
+                    ],
+                    style={'margin': '0px', 'marginBottom': '10px', 'display': 'flex',
+                           'justifyContent': 'space-between', 'alignItems': 'center'}
+                ),
+                dbc.Label("Select Date"),
+                dcc.DatePickerSingle(
+                    id="date-picker",
+                    min_date_allowed=dt(2018, 5, 7),
+                    max_date_allowed=dt(2018, 7, 1),
+                    initial_visible_month=dt(2018, 5, 7),
+                    date="2018-05-07",
+                    display_format="YYYY-MM-DD"
                 ),
                 dbc.Label("Select User"),
                 dcc.Dropdown(
@@ -314,7 +364,8 @@ controls = dbc.Card(
                         {'label': 'Dropoffs', 'value': 'dropoff'}
                     ],
                     value='pickup',
-                )
+                ),
+                dbc.Label("Select ride"),
             ]
         ),
         dbc.FormGroup(
@@ -346,41 +397,80 @@ controls = dbc.Card(
                 ),
             ]
         ),
+        dbc.FormGroup(
+            [
+                html.P(id="total-rides"),
+                html.P(id="total-rides-selection"),
+                html.P(id="date-value")
+            ],
+            style={'margin': '0'}
+        )
     ],
-    style={'height': '48.8%'},
+    style={'height': '48%'},
     body=True,
 )
 
-map_histogram =[
-        dcc.Graph(id="map-graph"),
-        dcc.Graph(id="histogram", style={'paddingTop': '45px'})
-    ]
+map_histogram = [
+    dcc.Graph(id="map-graph"),
+    dcc.Graph(id="histogram", style={'paddingTop': '45px'})
+]
 
 choropleth_map = dcc.Graph(
-        id='choropleth_map',
-        figure=choropleth_fig
-    )
-
-kepler_gl = dbc.Card(
-    html.Iframe(id='kepler_gl', srcDoc=open(os.path.join("kepler_maps", "kepler.gl.html")).read(), width='100%', height='100%'),
-    style={'height': '98%'}
+    id='choropleth_map',
+    figure=choropleth_fig
 )
 
+kepler_gl = dbc.Card(
+    html.Iframe(id='kepler_gl', srcDoc=open(os.path.join("kepler_maps", "kepler.gl.html")).read(), width='100%',
+                height='100%'),
+    style={'height': '100%'}
+)
+
+trip_fare = dcc.Graph(
+    id='trip_fare',
+    figure=go.Figure(go.Box(
+        y=df['trip_fare_usd'],
+        name="Trip Fare (USD)",
+        boxpoints='outliers',
+        marker=dict(
+            color='rgb(107,174,214)'),
+        line=dict(
+            color='rgb(107,174,214)')
+    )
+    )
+)
+
+count_vehicle_types = df.groupby(['vehicle_type']).size().reset_index(name='counts')
+
+vehicle_types = dcc.Graph(
+    id='vehicle_types',
+    figure=go.Figure(
+        data=[
+            go.Pie(
+                labels=count_vehicle_types['vehicle_type'],
+                values=count_vehicle_types['counts']
+            )
+        ]
+    )
+)
 
 tabs = dbc.Container(
     [
         dbc.Tabs(
             [
-                dbc.Tab(label="Choropleth Map", tab_id="choropleth_map"),
-                dbc.Tab(label="Kepler GL", tab_id="kepler_gl")
+                dbc.Tab(label="Most active districts", tab_id="choropleth_map"),
+                dbc.Tab(label="Rides in time", tab_id="kepler_gl"),
+                dbc.Tab(label="Trip Fare", tab_id="trip_fare"),
+                dbc.Tab(label="Types of vehicles", tab_id="vehicle_types")
             ],
             id="tabs",
             active_tab="scatter",
         ),
         html.Div(id="tab-content", style={'height': '100%'})
     ],
-    style={'height': '48.8%', 'margin': '0', 'width': '100%'}
+    style={'height': '48.5%', 'margin': '0', 'width': '100%'}
 )
+
 @app.callback(
     Output("tab-content", "children"),
     [Input("tabs", "active_tab")],
@@ -391,7 +481,12 @@ def render_tab_content(active_tab):
             return choropleth_map
         elif active_tab == "kepler_gl":
             return kepler_gl
+        elif active_tab == "trip_fare":
+            return trip_fare
+        elif active_tab == "vehicle_types":
+            return vehicle_types
     return "No tab selected"
+
 
 # App layout
 app.layout = html.Div(
@@ -404,11 +499,11 @@ app.layout = html.Div(
                 map_histogram
             )
         ],
-        style={'margin': '20px'}
+            style={'margin': '10px'}
         )
     ],
-    style = {'display': 'inline-block', 'width': '95%'}
+    style={'display': 'inline-block', 'width': '95%'}
 )
 
 if __name__ == "__main__":
-    app.run_server(port=8040, debug=True)
+    app.run_server(port=8040, debug=False)
