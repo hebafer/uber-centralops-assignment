@@ -12,8 +12,6 @@ from plotly import graph_objs as go
 import pandas as pd
 import numpy as np
 from datetime import datetime as dt
-
-from riyadh import riyadh_districts
 from choropleth import fig as choropleth_fig
 
 # Initialize app
@@ -356,7 +354,7 @@ controls = dbc.Card(
                     date="2018-05-07",
                     display_format="YYYY-MM-DD"
                 ),
-                dbc.Label("Select User"),
+                dbc.Label("Select ride"),
                 dcc.Dropdown(
                     id="switch_user",
                     options=[
@@ -364,20 +362,7 @@ controls = dbc.Card(
                         {'label': 'Dropoffs', 'value': 'dropoff'}
                     ],
                     value='pickup',
-                ),
-                dbc.Label("Select ride"),
-            ]
-        ),
-        dbc.FormGroup(
-            [
-                dbc.Label("Select a district"),
-                dcc.Dropdown(
-                    id="districts",
-                    options=[
-                        {"label": v, "value": k} for k, v in riyadh_districts.items()
-                    ],
-                    value="",
-                ),
+                )
             ]
         ),
         dbc.FormGroup(
