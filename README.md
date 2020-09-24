@@ -22,7 +22,7 @@ Moreover, we have encoded a GeoJSON representation of all the districts in Riyad
 ## Project structure
 
 * `assets/`: this directory contains the CSS style files, the UberMove font and static images such as the logo of Uber.
-*` data/`: this directory contains needed intermediate files and the final expanded dataset `riyadh_expanded.csv` to analyse.
+* `data/`: this directory contains needed intermediate files and the final expanded dataset `riyadh_expanded.csv` to analyse.
 * `kepler_maps/`: this directory contains a KeplerGL visualization of the dataset exported in a HTML file.
 * `process_geojson.py`: this script creates a GeoJSON representation with the districts of Riyadh as Polygons.
 * `expand_dataset.py`: this script expands the original dataset by adding the following columns: `[pickup_lat, pickup_long, dropoff_lat, dropoff_long, pickup_districts, dropoff_districts]`

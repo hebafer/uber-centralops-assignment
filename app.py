@@ -491,4 +491,4 @@ app.layout = html.Div(
 )
 
 if __name__ == "__main__":
-    app.run_server(port=8040, debug=False)
+    app.run_server(port=8040)
